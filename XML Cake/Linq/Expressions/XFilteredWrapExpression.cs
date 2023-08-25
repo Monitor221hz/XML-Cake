@@ -8,16 +8,17 @@ namespace XmlCake.Linq.Expressions;
 public class XFilteredWrapExpression : IXExpression
 {
 	private XmlNodeType allowedNodeType { get; set; }
-	public XFilteredWrapExpression(XmlNodeType nodeType, List<XStep> steps)
+	public XFilteredWrapExpression(XmlNodeType nodeType, List<IXStep> steps)
 	{
 		allowedNodeType = nodeType;
 		matchSteps = steps;
 	}
-	public XFilteredWrapExpression(XmlNodeType nodeType,params XStep[] steps) : this(nodeType, steps.ToList()) { }
+	public XFilteredWrapExpression(XmlNodeType nodeType,params IXStep[] steps) : this(nodeType, steps.ToList()) { }
 
 	public XMatch Match(List<XNode> nodes)
 	{
 		int p = 0;
+		XmlNodeType lastNodeType = XmlNodeType.None;
 		List<XNode> buffer = new List<XNode>();
 		foreach (XNode node in nodes)
 		{
@@ -37,10 +38,16 @@ public class XFilteredWrapExpression : IXExpression
 	public XMatchCollection Matches(List<XNode> nodes)
 	{
 		int p = 0;
+		XmlNodeType lastNodeType = XmlNodeType.None;
 		List<XMatch> matchList = new List<XMatch>();
 		List<XNode> buffer = new List<XNode>();
 		foreach (XNode node in nodes)
 		{
+			if (node.NodeType == XmlNodeType.Text && lastNodeType == XmlNodeType.Element) 
+			{ 
+				continue; 
+			}
+			lastNodeType = node.NodeType;
 			bool isMatch = matchSteps[p].IsMatch(node);
 			if (isMatch) { p++; }
 
@@ -58,5 +65,5 @@ public class XFilteredWrapExpression : IXExpression
 	}
 
 
-	private List<XStep> matchSteps { get; set; } = new List<XStep>();
+	private List<IXStep> matchSteps { get; set; } = new List<IXStep>();
 }

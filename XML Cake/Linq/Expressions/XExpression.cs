@@ -13,8 +13,8 @@ public class XExpression : IXExpression
 {
 
 	
-	public XExpression(List<XStep> steps) => matchSteps = steps;
-	public XExpression(params XStep[] steps) => matchSteps = steps.ToList();
+	public XExpression(List<IXStep> steps) => matchSteps = steps;
+	public XExpression(params IXStep[] steps) => matchSteps = steps.ToList();
 
 	public XMatch Match(List<XNode> nodes)
 	{
@@ -75,6 +75,6 @@ public class XExpression : IXExpression
 		return new XMatchCollection(matchList);
 	}
 
-	private List<XStep> matchSteps { get; set;  } = new List<XStep>();
+	private List<IXStep> matchSteps { get; set;  } = new List<IXStep>();
 	
 }
