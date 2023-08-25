@@ -30,7 +30,7 @@ namespace XmlCake.Test
 				var element = XElement.Load(file);
 				var list = lookup.MapFromElement(element);
 
-				var expression = new XFilteredWrapExpression(XmlNodeType.Text, new XStep(XmlNodeType.Comment, " MOD_CODE ~bkosha~ OPEN "), new XStep(XmlNodeType.Comment, " ORIGINAL "), new XStep(XmlNodeType.Comment, " CLOSE "));
+				var expression = new XWrapExpression(new XStep(XmlNodeType.Comment, " MOD_CODE ~bkosha~ OPEN "), new XStep(XmlNodeType.Comment, " ORIGINAL "), new XStep(XmlNodeType.Comment, " CLOSE "));
 
 				var matchCollection = expression.Matches(list);
 				if (matchCollection.Success)
@@ -56,7 +56,7 @@ namespace XmlCake.Test
 					foreach(var node in match)
 					{
 						
-						Debug.WriteLine($"{lookup.LookupPath(node)}:\n{node}");
+						Debug.WriteLine($"{lookup.LookupPath(node)}: {node.NodeType}");
 					}
 				}
 			}
