@@ -62,17 +62,17 @@ public class XMap : XDocument
 	/// Return element at target path, with the given root and key generate function. Near to O(1) time complexity when path is mapped, O(n) when unmapped.
 	/// </summary>
 	/// <param name="path"></param>
-	/// <param name="tempRoot"></param>
+	/// <param name="workingRoot"></param>
 	/// <param name="generateKey"></param>
 	/// <returns></returns>
-	public XElement NavigateTo(string path, XElement tempRoot, Func<XElement, string> generateKey)
+	public XElement NavigateTo(string path, XElement workingRoot, Func<XElement, string> generateKey)
 	{
 		XElement element;
  
 		if (mappedElements.TryGetValue(path, out element!)) return element;
 
 		string[] pathSections = path.Split('/');
-		element = tempRoot;
+		element = workingRoot;
 		foreach (string section in pathSections)
 		{
 			element = FindChildByKey(element, section, generateKey);
@@ -91,9 +91,9 @@ public class XMap : XDocument
 	/// Return element at target path, with the given root. Near to O(1) time complexity when path is mapped, O(n) when unmapped.
 	/// </summary>
 	/// <param name="path"></param>
-	/// <param name="tempRoot"></param>
+	/// <param name="workingRoot"></param>
 	/// <returns></returns>
-	public XElement NavigateTo(string path, XElement tempRoot) => NavigateTo(path, tempRoot, GenerateKey);
+	public XElement NavigateTo(string path, XElement workingRoot) => NavigateTo(path, workingRoot, GenerateKey);
 
     
 	public void MapLayer(bool ignoreParents, params int[] pathIndices)
