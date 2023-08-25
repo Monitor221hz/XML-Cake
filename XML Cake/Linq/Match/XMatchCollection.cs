@@ -19,6 +19,8 @@ public class XMatchCollection : IEnumerable<XMatch>
 
 	public int Count => groupCollection.Count;
 
+	public List<XMatch> List => groupCollection;
+
 	public IEnumerator<XMatch> GetEnumerator()
 	{
 		return new XMatchCollectionEnumerator(groupCollection); 
