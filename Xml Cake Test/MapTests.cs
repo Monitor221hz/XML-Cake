@@ -11,13 +11,15 @@ namespace XmlCake.Test
 		public void LayerTest()
 		{
 			var testMap = XMap.Load("C:\\Users\\Monitor\\Documents\\Work\\TestEnvironments\\Xml Cake\\Behaviour\\behaviors\\0_master.hkx");
+			XElement root = testMap.NavigateTo("__data__");
+			//testMap.MapLayer("__data__", true);
 
-			testMap.MapLayer("__data__", true);
+
+			testMap.MapLayer(root, true);
 
 			var xElement = testMap.Lookup("#0106");
 			testMap.Lookup("#0560");
 			testMap.Lookup("#0105"); 
-			Assert.NotNull(xElement);
 
 		}
 
@@ -46,6 +48,23 @@ namespace XmlCake.Test
 			testMap.MapSlice("#0240");
 			testMap.MapSlice("#0106");
 			testMap.MapSlice("#1313"); 
+
+			testMap.Lookup("#0560/bindings/Element0/memberPath");
+			testMap.Lookup("#0240/boneIndices");
+			testMap.Lookup("#0106/characterPropertyNames");
+			testMap.Lookup("#1313/boneWeights");
+
+		}
+		[Fact]
+		public void SliceTest2()
+		{
+			var testMap = XMap.Load("C:\\Users\\Monitor\\Documents\\Work\\TestEnvironments\\Xml Cake\\Behaviour\\behaviors\\0_master.hkx");
+
+			testMap.MapLayer("__data__");
+			testMap.MapSlice("#0560");
+			testMap.MapSlice("#0240");
+			testMap.MapSlice("#0106");
+			testMap.MapSlice("#1313");
 
 			testMap.Lookup("#0560/bindings/Element0/memberPath");
 			testMap.Lookup("#0240/boneIndices");

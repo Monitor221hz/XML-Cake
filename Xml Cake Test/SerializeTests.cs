@@ -12,23 +12,46 @@ namespace XmlCake.Test
 {
 	public class SerializeTests
 	{
-		[Fact]
-		public void ExtractorTest()
+
+		public void LookupMod(string modFolder, XPathLookup lookup)
 		{
-			string[] files = Directory.GetFiles("C:\\Users\\Monitor\\Documents\\Work\\TestEnvironments\\Xml Cake\\Behaviour\\bkocrd\\1hm_behavior"); 
-
-			foreach (string file in files)
+			string[] folders = Directory.GetDirectories(modFolder);
+			foreach (string folder in folders)
 			{
-				XExtractor extractor = new XExtractor(file);
 
-				var result = extractor.Collect();
+				string[] files = Directory.GetFiles(folder);
 
+				foreach (var item in files)
+				{
 
+					XElement element = XElement.Load(item);
+					lookup.MapFromElement(element);
+				}
+			}
+		}
+		[Fact]
+		public void XLookupTest()
+		{
+			XPathLookup lookup = new XPathLookup();
 
-				List<XNode> nodes = result.TrackedNodes;
-				Debug.WriteLine(result.LookupNode(nodes[0]));
+			string Root = "C:\\Users\\Monitor\\Documents\\Work\\TestEnvironments\\Xml Cake\\Behaviour\\Nemesis_Engine\\mod";
+			int modCount = 0; 
+			int folderCount = 0;
+			int fileCount = 0; 
+
+			string[] modFolders = Directory.GetDirectories(Root);
+			foreach (string modFolder in modFolders)
+			{
+				LookupMod(modFolder, lookup);
 			}
 
+
+
+
+
+#if DEBUG
+			Debug.WriteLine($"Serialized {folderCount} folders with {fileCount} files");
+#endif
 			//string path = "C:\\Users\\Monitor\\Documents\\Work\\TestEnvironments\\Xml Cake\\Behaviour\\bkocrd\\1hm_behavior\\#2976.txt";
 
 			//XExtractor fextractor = new XExtractor(path);
@@ -42,6 +65,29 @@ namespace XmlCake.Test
 			//	Debug.WriteLine(fresult.LookupNode(node));
 			//	Debug.WriteLine(node.ToString());
 			//}
+		}
+		[Fact] 
+		public async void XLookupAsyncTest()
+		{
+			XPathLookup lookup = new XPathLookup();
+
+			string Root = "C:\\Users\\Monitor\\Documents\\Work\\TestEnvironments\\Xml Cake\\Behaviour\\Nemesis_Engine\\mod";
+			int modCount = 0;
+			int folderCount = 0;
+			int fileCount = 0;
+
+			string[] modFolders = Directory.GetDirectories(Root);
+			List<Task> tasks = new List<Task>();
+			foreach (string modFolder in modFolders)
+			{
+				tasks.Add(Task.Run(() => LookupMod(modFolder, lookup))); 
+			}
+			await Task.WhenAll(tasks);
+
+
+#if DEBUG
+			Debug.WriteLine($"Serialized {folderCount} folders with {fileCount} files");
+#endif
 		}
 
 		[Fact]

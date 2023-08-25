@@ -17,19 +17,50 @@ namespace XmlCake.Test
 		[Fact]
 		public void WrapExpressionTest()
 		{
-			string path = "C:\\Users\\Monitor\\Documents\\Work\\TestEnvironments\\Xml Cake\\Behaviour\\bkosha\\0_master\\#0853.txt";
+			//string path = "C:\\Users\\Monitor\\Documents\\Work\\TestEnvironments\\Xml Cake\\Behaviour\\bkosha\\0_master\\#0853.txt";
 
-			XExtractor extractor = new XExtractor(path);
+			string[] files = Directory.GetFiles("C:\\Users\\Monitor\\Documents\\Work\\TestEnvironments\\Xml Cake\\Behaviour\\bkosha\\0_master");
 
-			var result = extractor.CollectElement();
+			List<XMatchCollection> matches = new List<XMatchCollection>();
+			XPathLookup lookup = new XPathLookup(); 
+			foreach(string file in files)
+			{
+				
+
+				var element = XElement.Load(file);
+				var list = lookup.MapFromElement(element);
+
+				var expression = new XFilteredWrapExpression(XmlNodeType.Text, new XStep(XmlNodeType.Comment, " MOD_CODE ~bkosha~ OPEN "), new XStep(XmlNodeType.Comment, " ORIGINAL "), new XStep(XmlNodeType.Comment, " CLOSE "));
+
+				var matchCollection = expression.Matches(list);
+				if (matchCollection.Success)
+				{
+					matches.Add(matchCollection);
+				}
+			}
 
 
-			var expression = new XFilteredWrapExpression(XmlNodeType.Text, new XStep(XmlNodeType.Comment), new XStep(XmlNodeType.Comment),new XStep(XmlNodeType.Comment));
 
-			var xmatch = expression.Matches(result.TrackedNodes); 
 
-			Assert.True(xmatch.Success );
 
+			Assert.True(matches.Count > 0 );
+
+#if DEBUG
+			Debug.WriteLine($"Replace matches found in {matches.Count} files.");
+			foreach(var matchGroup in matches)
+			{
+				Debug.WriteLine($"Found {matchGroup.Count} matches in group");
+				foreach (var match in matchGroup)
+				{
+
+					foreach(var node in match)
+					{
+						
+						Debug.WriteLine($"{lookup.LookupPath(node)}:\n{node}");
+					}
+				}
+			}
+#endif
 			//foreach (XNode group in xmatch)
 			//{
 			//	Debug.WriteLine(group.ToString());
