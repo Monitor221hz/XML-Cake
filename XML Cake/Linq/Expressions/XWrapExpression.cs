@@ -26,7 +26,11 @@ public class XWrapExpression : IXExpression
 
 			if (p > 0) { buffer.Add(node); }
 
-			if (p == matchSteps.Count) { return new XMatch(buffer); }
+			if (p == matchSteps.Count) 
+			{
+				if (buffer.Count == matchSteps.Count) break; 
+				return new XMatch(buffer); 
+			}
 
 		}
 		return new XMatch();
@@ -53,6 +57,7 @@ public class XWrapExpression : IXExpression
 
 			if (p == matchSteps.Count)
 			{
+				if (buffer.Count == matchSteps.Count) break;
 				p = 0;
 				matchList.Add(new XMatch(new List<XNode>(buffer)));
 				buffer.Clear();
