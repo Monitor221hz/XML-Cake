@@ -15,7 +15,9 @@ public class XMatchCollection : IEnumerable<XMatch>
 
 	public XMatchCollection(List<XMatch> groups) => groupCollection = groups;
 
-	public bool Success => groupCollection.Count > 0;
+	public bool Success => groupCollection.Count > 0 && groupCollection[0].Success;
+
+	public int Count => groupCollection.Count;
 
 	public IEnumerator<XMatch> GetEnumerator()
 	{
@@ -32,7 +34,7 @@ public class XMatchCollectionEnumerator : IEnumerator<XMatch>
 {
 	private List<XMatch> groupCollection;
 
-	private int index { get; set;  } = 0; 
+	private int index { get; set;  } = -1; 
 
 	internal XMatchCollectionEnumerator(List<XMatch> groups) => groupCollection=groups;
 
@@ -53,7 +55,7 @@ public class XMatchCollectionEnumerator : IEnumerator<XMatch>
 
 	public void Reset()
 	{
-		index = 0; 
+		index = -1; 
 	}
 }
 

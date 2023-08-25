@@ -50,7 +50,7 @@ public class XFilteredWrapExpression : IXExpression
 			{
 				p = 0;
 				matchList.Add(new XMatch(buffer));
-				buffer.Clear();
+				buffer = new List<XNode>();
 			}
 
 		}

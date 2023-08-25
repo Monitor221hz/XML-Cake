@@ -41,7 +41,7 @@ public class XWrapExpression : IXExpression
 			if (p == matchSteps.Count)
 			{
 				p = 0;
-				matchList.Add(new XMatch(buffer));
+				matchList.Add(new XMatch(new List<XNode>(buffer)));
 				buffer.Clear();
 			}
 

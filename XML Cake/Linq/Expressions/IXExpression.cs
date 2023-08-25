@@ -9,7 +9,4 @@ public interface IXExpression
 	public XMatchCollection Matches(List<XNode> nodes); 
 	public XMatch Match(List<XNode> nodes);
 
-
-
-
 }
