@@ -95,7 +95,7 @@ public class XMap : XDocument
 	/// <returns></returns>
 	public XElement NavigateTo(string path, XElement tempRoot) => NavigateTo(path, tempRoot, GenerateKey);
 
-
+    
 	public void MapLayer(bool ignoreParents, params int[] pathIndices)
     {
         List<XElement> layerElements = new List<XElement>() { Root! };
@@ -115,17 +115,33 @@ public class XMap : XDocument
             MapChildElement(parentPath, element, i);
         }
     }
-    /// <summary>
-    /// Maps all immediate children of the target element. 
-    /// </summary>
-    /// <param name="rootPath"></param>
-    /// <param name="useBlankRoot">whether mapped children use a blank root path</param>
-    public void MapLayer(string rootPath, bool useBlankRoot)
+
+	public void MapLayer(XElement workingRoot, bool useBlankPath)
+	{
+
+
+
+		string rootPath = useBlankPath ? string.Empty : GetPath(workingRoot);
+		List<XElement> layerElements = workingRoot.Elements().ToList();
+		Debug.Assert(layerElements.Count > 0);
+		for (int i = 0; i < layerElements.Count; i++)
+		{
+
+			XElement element = layerElements[i];
+			MapChildElement(rootPath, element, i);
+		}
+	}
+	/// <summary>
+	/// Maps all immediate children of the target element. 
+	/// </summary>
+	/// <param name="rootPath"></param>
+	/// <param name="useBlankPath">whether mapped children use a blank root path</param>
+	public void MapLayer(string rootPath, bool useBlankPath)
     {
 
         XElement workingRoot = NavigateTo(rootPath);
         
-        rootPath = useBlankRoot ? string.Empty : rootPath; 
+        rootPath = useBlankPath ? string.Empty : rootPath; 
         List<XElement> layerElements = workingRoot.Elements().ToList();
         Debug.Assert(layerElements.Count > 0); 
         for (int i = 0; i < layerElements.Count; i++)
@@ -141,25 +157,51 @@ public class XMap : XDocument
 	/// <param name="rootPath"></param>
 	public void MapLayer(string rootPath) => MapLayer(rootPath, true);
 
+    public void MapSlice(XElement workingRoot, int depth, bool useBlankPath)
+    {
+		if (depth < 1) return;
+		string rootPath = useBlankPath ? string.Empty : GetPath(workingRoot);
+		List<XElement> layerElements = workingRoot.Elements().ToList();
+		depth -= 1;
+		for (int i = 0; i < layerElements.Count; i++)
+		{
+			XElement element = layerElements[i];
+			string currentPath = MapChildElement(rootPath, element, i);
+			MapSlice(currentPath, depth, useBlankPath);
+		}
+	}
 
-    /// <summary>
-    /// Map all children to a specified generation depth.
-    /// </summary>
-    /// <param name="rootPath"></param>
-    /// <param name="depth"></param>
-    /// <param name="useNewRoot"></param>
-    public void MapSlice(string rootPath, int depth, bool useNewRoot) //vertical mapping 
+    public void MapSlice(XElement workingRoot, bool useBlankPath)
+	{
+		string rootPath = useBlankPath ? string.Empty : GetPath(workingRoot);
+		List<XElement> layerElements = workingRoot.Elements().ToList();
+		for (int i = 0; i < layerElements.Count; i++)
+		{
+			XElement element = layerElements[i];
+			string currentPath = MapChildElement(rootPath, element, i);
+			MapSlice(currentPath, false);
+		}
+	}
+
+
+	/// <summary>
+	/// Map all children to a specified generation depth.
+	/// </summary>
+	/// <param name="rootPath"></param>
+	/// <param name="depth"></param>
+	/// <param name="useBlankPath"></param>
+	public void MapSlice(string rootPath, int depth, bool useBlankPath) //vertical mapping 
     {
         if (depth < 1) return;
         XElement workingRoot = NavigateTo(rootPath);
-        rootPath = useNewRoot ? string.Empty : rootPath; 
+        rootPath = useBlankPath ? string.Empty : rootPath; 
         List<XElement> layerElements = workingRoot.Elements().ToList();
         depth -= 1; 
         for (int i = 0; i < layerElements.Count; i++)
         {
             XElement element = layerElements[i];
             string currentPath = MapChildElement(rootPath, element, i);
-            MapSlice(currentPath, depth, useNewRoot);
+            MapSlice(currentPath, depth, useBlankPath);
         }
         
     }
@@ -167,12 +209,12 @@ public class XMap : XDocument
     /// Map all children.
     /// </summary>
     /// <param name="rootPath"></param>
-    /// <param name="useBlankRoot"></param>
-    public void MapSlice(string rootPath, bool useBlankRoot)
+    /// <param name="useBlankPath"></param>
+    public void MapSlice(string rootPath, bool useBlankPath)
     {
 
         XElement workingRoot = !String.IsNullOrEmpty(rootPath) ? NavigateTo(rootPath) : Root!;
-        rootPath = useBlankRoot ? string.Empty : rootPath; 
+        rootPath = useBlankPath ? string.Empty : rootPath; 
         List<XElement> layerElements = workingRoot.Elements().ToList();
         for (int i = 0; i < layerElements.Count; i++)
         {
@@ -185,9 +227,11 @@ public class XMap : XDocument
 
     public void MapSlice(string rootPath) => MapSlice(rootPath, false);
 
+    public void MapSlice(XElement rootElement) => MapSlice(GenerateKey(rootElement), false);
+
     public void MapAll() => MapSlice(string.Empty, false); 
 
-    public void ReplaceElement(string path, XElement useBlankRoot)
+    public void ReplaceElement(string path, XElement useBlankPath)
     {
         
         XElement targetElement = NavigateTo(path); 
@@ -197,7 +241,7 @@ public class XMap : XDocument
         lock(targetElement.Parent)
         lock(targetElement)
         {
-            targetElement.ReplaceWith(useBlankRoot); 
+            targetElement.ReplaceWith(useBlankPath); 
         }
     }
 
@@ -257,14 +301,19 @@ public class XMap : XDocument
 
 
 
-
+    private string GetPath(string path, XElement element, int elementIndex)
+    {
+		string defaultValue = element.NodeType.ToString();
+		string key = GenerateKey(element);
+		key = (key == defaultValue) ? GetDefaultPath(path, defaultValue, elementIndex) : GetUniquePath(path, key);
+        return key; 
+	}
+    private string GetPath(XElement element) => GetPath(String.Empty, element, 0);
 	private string MapChildElement(string path, XElement element, int elementIndex)
     {
-        string defaultValue = element.NodeType.ToString();
-        string key = GenerateKey(element);
-        key = (key == defaultValue) ? GetDefaultPath(path, defaultValue, elementIndex) : GetUniquePath(path, key);
-        MapElementToPath(key, element); 
-        return key;
+        string key = GetPath(path, element, elementIndex);
+        MapElementToPath(key, element);
+        return key; 
     }
 
     private void MapNormal(string key, XElement element)

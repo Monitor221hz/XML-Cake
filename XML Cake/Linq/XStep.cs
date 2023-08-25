@@ -10,7 +10,7 @@ public class XStep
     public XmlNodeType NodeType { get; private set; }
     public string Name {get; private set;}= string.Empty; 
     public string Value { get; private set;} = string.Empty; 
-    public XStep (XmlNodeType nodeType, string name="", string value="")
+    public XStep (XmlNodeType nodeType,string value="", string name = "")
     {
         NodeType = nodeType; 
         Name = name; 

@@ -14,7 +14,7 @@ public class XPathTracker
 {
     List<string> trackedPath = new List<string>();
     List<int> unnamedElementCounts = new List<int>();
-
+    
     public XPathTracker()
     {
         GetPathName = GetPathNameFromAttribute;
@@ -24,13 +24,23 @@ public class XPathTracker
         HasIdentifierNode = HasIdentifierFromAttribute; 
     }
 
-    public List<XNode> TrackedNodes => nodes; 
-    
-    private Dictionary<XNode, string> nodePaths { get; set;  } = new Dictionary<XNode, string>();
-    private List<XNode> nodes { get; set; } = new List<XNode>(); 
+    public void Reset()
+    {
+
+			trackedPath = new List<string>();
+			unnamedElementCounts = new List<int>();
+			maxDepth = -1;
+			lastDepth = 2147483647;
+            reset = true;
+
+	}
+
+
 
     int maxDepth = -1;
     int lastDepth = 2147483647;
+
+    private bool reset = true; 
 
     private Func<XmlReader, string> GetPathName;
     private Func<XmlReader, bool> HasIdentifier;
@@ -59,11 +69,10 @@ public class XPathTracker
     public string GetCurrentPath(XmlReader reader) => string.Join("/", trackedPath.SkipLast(maxDepth - reader.Depth));
 	public string GetCurrentPath(XNode node) => string.Join("/", trackedPath.SkipLast(maxDepth - GetNodeDepth(node)));
 
-	public string LookupNode(XNode node) => nodePaths[node]; 
 
     public int GetNodeDepth(XNode node)
     {
-        return node.Ancestors().Count();
+        return (node.NodeType != XmlNodeType.Element) ? node.Ancestors().Count()+1 : node.Ancestors().Count();
 	}
     public void ResolvePath(XmlReader reader)
     {
@@ -93,6 +102,7 @@ public class XPathTracker
     
     public void ResolvePath(XNode node)
     {
+        reset = false; 
         int depth = GetNodeDepth(node);
         XmlNodeType nodeType = node.NodeType;
 		if (depth < lastDepth && depth + 1 < trackedPath.Count) unnamedElementCounts[depth + 1] = 0;
@@ -119,44 +129,7 @@ public class XPathTracker
 
 
 	public static bool IsContentNode(XmlNodeType nodeType) => (XmlNodeType.EndElement != nodeType && XmlNodeType.Comment != nodeType);
-
     
-
-	public bool AddTrackedNode(XmlReader reader)
-    {
-
-        switch (reader.NodeType)
-        {
-            case XmlNodeType.EndElement:
-                return false;
-            case XmlNodeType.Whitespace:
-                return false;
-            default:
-				XNode node = XNode.ReadFrom(reader);
-				nodes.Add(node);
-				nodePaths.Add(node, GetCurrentPath(reader));
-				return true;
-		}
-
-	}
-
-    public bool AddTrackedNode(XNode node)
-    {
-		switch (node.NodeType)
-		{
-			case XmlNodeType.EndElement:
-				return false;
-			case XmlNodeType.Whitespace:
-				return false;
-			default:
-				nodes.Add(node);
-				nodePaths.Add(node, GetCurrentPath(node));
-				return true;
-		}
-	}
-
-    
-
     private void ChangePath(int depth, string value) => trackedPath[depth] = value;
 
     private void ExtendPath(XmlReader reader)
