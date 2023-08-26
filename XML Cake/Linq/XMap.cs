@@ -308,7 +308,7 @@ public class XMap : XDocument
 		key = (key == defaultValue) ? GetDefaultPath(path, defaultValue, elementIndex) : GetUniquePath(path, key);
         return key; 
 	}
-    private string GetPath(XElement element) => GetPath(String.Empty, element, 0);
+    public string GetPath(XElement element) => GetPath(String.Empty, element, 0);
 	private string MapChildElement(string path, XElement element, int elementIndex)
     {
         string key = GetPath(path, element, elementIndex);
