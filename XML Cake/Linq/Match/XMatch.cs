@@ -17,6 +17,15 @@ public class XMatch : IEnumerable<XNode>
 
 	public bool Success => nodes.Count > 0;
 
+	public XNode this[int index]
+	{
+		get => nodes[index]; 
+		set => nodes[index] = value;
+	}
+
+	public int Count => nodes.Count;	
+
+
 	public IEnumerator<XNode> GetEnumerator()
 	{
 		return new XMatchEnumerator(nodes);
