@@ -74,6 +74,7 @@ public class XMap : XDocument
 
 		string[] pathSections = path.Split('/');
 		element = workingRoot;
+ 
 		foreach (string section in pathSections)
 		{
 			element = FindChildByKey(element, section, generateKey);
@@ -232,21 +233,22 @@ public class XMap : XDocument
 
     public void MapAll() => MapSlice(string.Empty, false); 
 
-    public void ReplaceElement(string path, XElement useBlankPath)
+    public void ReplaceElement(string path, XElement newElement)
     {
         
         XElement targetElement = NavigateTo(path); 
-
+        
         Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist."); 
         Debug.Assert(targetElement.Parent is not null, $"Target element at path:{path} has no parent.");
         lock(targetElement.Parent)
         lock(targetElement)
         {
-            targetElement.ReplaceWith(useBlankPath); 
+            targetElement.ReplaceWith(newElement);
+            if (targetElement == newElement) MapResetDuplicates(path, newElement);
         }
     }
 
-    public void AddElement(string path, XElement element)
+    public void AppendElement(string path, XElement element)
     {
         XElement targetElement = NavigateTo(path); 
 
@@ -263,6 +265,8 @@ public class XMap : XDocument
         Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist.");
         return new XElement(targetElement); 
     }
+
+    
     private string GetDefaultPath(string path, string defaultValue, int elementIndex)
     {
         bool IsOpenPath = (path != string.Empty && path[path.Length - 1] != XPATH_DIVIDER);
@@ -313,7 +317,10 @@ public class XMap : XDocument
 	private string MapChildElement(string path, XElement element, int elementIndex)
     {
         string key = GetPath(path, element, elementIndex);
-        MapElementToPath(key, element);
+        lock(mappedElements)
+        {
+			MapElementToPath(key, element);
+		}
         return key; 
     }
 
