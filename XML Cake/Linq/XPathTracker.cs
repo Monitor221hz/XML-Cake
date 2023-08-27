@@ -67,14 +67,34 @@ public class XPathTracker
     }
 
     public string GetCurrentPath(XmlReader reader) => string.Join("/", trackedPath.SkipLast(maxDepth - reader.Depth));
-	public string GetCurrentPath(XNode node) => string.Join("/", trackedPath.SkipLast(maxDepth - GetNodeDepth(node)));
+	public string GetCurrentPath(XNode node) => string.Join("/", trackedPath.SkipLast(Math.Abs(maxDepth - GetNodeDepth(node))));
 
 
-    public int GetNodeDepth(XNode node)
-    {
-        return (node.NodeType != XmlNodeType.Element) ? node.Ancestors().Count()+1 : node.Ancestors().Count();
+	//   public int GetNodeDepth(XNode node)
+	//   {
+	//       return (node.NodeType != XmlNodeType.Element) ? node.Ancestors().Count()+1 : node.Ancestors().Count();
+	//}
+	private int GetNodeDepthResolved(XNode node)
+	{
+		int depth = 0;
+		XNode parentNode = node;
+		while (parentNode.Parent != null)
+		{
+			parentNode = parentNode.Parent;
+			depth++;
+		}
+		return depth;
+
 	}
-    public void ResolvePath(XmlReader reader)
+	private int GetNodeDepth(XNode node)
+    {
+        int depth = GetNodeDepthResolved(node);
+        int ret = (node.NodeType == XmlNodeType.Text) ? depth+1 : depth;
+        return ret;
+    }
+
+
+	public void ResolvePath(XmlReader reader)
     {
         int depth = reader.Depth; 
         XmlNodeType nodeType = reader.NodeType;
@@ -103,9 +123,16 @@ public class XPathTracker
     public void ResolvePath(XNode node)
     {
         reset = false; 
-        int depth = GetNodeDepth(node);
+        int depth = GetNodeDepthResolved(node);
         XmlNodeType nodeType = node.NodeType;
-		if (depth < lastDepth && depth + 1 < trackedPath.Count) unnamedElementCounts[depth + 1] = 0;
+		if (depth < lastDepth && depth + 1 < trackedPath.Count)
+        {
+            for (int i = depth+1; i < unnamedElementCounts.Count; i++)
+            {
+                unnamedElementCounts[i] = 0;
+            }
+			//unnamedElementCounts[depth + 1] = 0;
+		}
 		lastDepth = depth;
 		if (depth > maxDepth)
 		{
