@@ -13,7 +13,7 @@ public class XPathLookup
     public XPathLookup() { }
 
     Dictionary<XNode, string> nodePaths = new Dictionary<XNode, string>();
-    List<XNode> nodes = new List<XNode>();
+
 
 	public List<XNode> MapFromElement(XElement root)
 	{
