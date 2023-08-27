@@ -61,8 +61,21 @@ public static class StringExtension
 
 		return string.Join(separator, sections);
 	}
+	public static string Replace(this string self,
+								  string oldValue, string newValue,
+								  bool firstOccurrenceOnly = false)
+	{
+		if (!firstOccurrenceOnly)
+			return self.Replace(oldValue, newValue);
 
-	
+		int pos = self.IndexOf(oldValue);
+		if (pos < 0)
+			return self;
+
+		return self.Substring(0, pos) + newValue
+			   + self.Substring(pos + oldValue.Length);
+	}
+
 
 	//public static void RemoveLine(this XElement element, char separator, params int[] indexes)
 	//{
