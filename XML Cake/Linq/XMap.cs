@@ -58,6 +58,7 @@ public class XMap : XDocument
 
     public XElement Lookup(string path) => mappedElements[path];
 
+    public bool PathExists(string path) => mappedElements.ContainsKey(path);
 	/// <summary>
 	/// Return element at target path, with the given root and key generate function. Near to O(1) time complexity when path is mapped, O(n) when unmapped.
 	/// </summary>
@@ -293,12 +294,12 @@ public class XMap : XDocument
 			int childNum = (Int32)key[numIndex + 1];
 			return parent.Elements().ElementAt(childNum);
 		}
-		return parent.Elements().Where(e => generateKey(e) == key).First();
+		return parent.Elements().Where(e => generateKey(e) == key).FirstOrDefault(new XElement("null"));
 	}
 
+    
+
     private XElement FindChildByKey(XElement parent, string key) => FindChildByKey(parent, key, GenerateKey);
-
-
 
 
     private string GetPath(string path, XElement element, int elementIndex)
