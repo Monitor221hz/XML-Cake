@@ -236,7 +236,7 @@ public class XMap : XDocument
     public void ReplaceElement(string path, XElement newElement)
     {
         
-        XElement targetElement = NavigateTo(path); 
+        XElement targetElement = Lookup(path); 
         
         Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist."); 
         Debug.Assert(targetElement.Parent is not null, $"Target element at path:{path} has no parent.");
@@ -250,8 +250,8 @@ public class XMap : XDocument
 
     public void AppendElement(string path, XElement element)
     {
-        XElement targetElement = NavigateTo(path); 
-
+        XElement targetElement = Lookup(path); 
+        
         Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist."); 
         lock(targetElement)
         {
@@ -261,7 +261,7 @@ public class XMap : XDocument
 
     public XElement CopyElement(string path)
     {
-        XElement targetElement = NavigateTo(path); 
+        XElement targetElement = Lookup(path); 
         Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist.");
         return new XElement(targetElement); 
     }
