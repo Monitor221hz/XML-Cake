@@ -13,18 +13,26 @@ public class XWrapExpression : IXExpression
 	public XMatch Match(List<XNode> nodes)
 	{
 		int p = 0;
-		XmlNodeType lastNodeType = XmlNodeType.None;
+		int skipCount = 0; 
 		List<XNode> buffer = new List<XNode>();
 		foreach (XNode node in nodes)
 		{
-			if (node.NodeType == XmlNodeType.Text && lastNodeType == XmlNodeType.Element)
+			if (skipCount > 0)
 			{
+				skipCount -= 1;
 				continue;
 			}
-			lastNodeType = node.NodeType;
 			if (matchSteps[p].IsMatch(node)) { p++; }
+			if (p > 0)
+			{
+				if (node.NodeType == XmlNodeType.Element)
+				{
+					XElement element = (XElement)node;
+					skipCount = element.DescendantNodes().Count(); //skip child nodes 
+				}
+				buffer.Add(node);
 
-			if (p > 0) { buffer.Add(node); }
+			}
 
 			if (p == matchSteps.Count) 
 			{
@@ -41,19 +49,28 @@ public class XWrapExpression : IXExpression
 	public XMatchCollection Matches(List<XNode> nodes)
 	{
 		int p = 0;
-		XmlNodeType lastNodeType = XmlNodeType.None;
+
+		int skipCount = 0; 
 		List<XMatch> matchList = new List<XMatch>();
 		List<XNode> buffer = new List<XNode>();
 		foreach (XNode node in nodes)
 		{
-			if (node.NodeType == XmlNodeType.Text && lastNodeType == XmlNodeType.Element)
+			if (skipCount > 0)
 			{
+				skipCount -= 1; 
 				continue;
 			}
-			lastNodeType = node.NodeType;
 			if (matchSteps[p].IsMatch(node)) { p++;  }
+			if (p > 0)
+			{
+				if (node.NodeType == XmlNodeType.Element)
+				{
+					XElement element = (XElement)node;
+					skipCount = element.DescendantNodes().Count(); //skip child nodes 
+				}
+				buffer.Add(node);
 
-			if (p > 0) { buffer.Add(node); }
+			}
 
 			if (p == matchSteps.Count)
 			{
