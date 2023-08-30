@@ -252,7 +252,7 @@ public class XMap : XDocument
         }
         return targetElement;
     }
-
+    //todo: proper insertelement method with remapping of parent
     public string AppendElement(string path, XElement element)
     {
         XElement targetElement;
