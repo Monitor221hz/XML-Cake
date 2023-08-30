@@ -67,7 +67,7 @@ public class XPathTracker
     }
 
     public string GetCurrentPath(XmlReader reader) => string.Join("/", trackedPath.SkipLast(maxDepth - reader.Depth));
-	public string GetCurrentPath(XNode node) => string.Join("/", trackedPath.SkipLast(Math.Abs(maxDepth - GetNodeDepth(node))));
+	public string GetCurrentPathByElement(XNode node) => string.Join("/", trackedPath.SkipLast(Math.Abs(maxDepth - GetElementDepth(node))));
 
 
 	//   public int GetNodeDepth(XNode node)
@@ -84,12 +84,24 @@ public class XPathTracker
 			depth++;
 		}
 		return depth;
+	}
 
+    private int GetElementDepth(XNode node)
+    {
+		int depth = 0;
+		XNode parentNode = node;
+		while (parentNode.Parent != null)
+		{
+			if (parentNode.NodeType == XmlNodeType.Element) { depth++; }
+			parentNode = parentNode.Parent;
+			
+		}
+		return depth;
 	}
 	private int GetNodeDepth(XNode node)
     {
-        int depth = GetNodeDepthResolved(node);
-        int ret = (node.NodeType == XmlNodeType.Text) ? depth+1 : depth;
+        int depth = GetElementDepth(node);
+        int ret = (node.NodeType == XmlNodeType.Text) ? depth : depth;
         return ret;
     }
 

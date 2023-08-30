@@ -27,7 +27,9 @@ public class XPathLookup
 		foreach (XNode node in nodes)
 		{
 			tracker.ResolvePath(node);
-			AddTrackedNode(node, tracker.GetCurrentPath(node));
+			string currentPath = tracker.GetCurrentPathByElement(node); //remove later
+			
+			AddTrackedNode(node, tracker.GetCurrentPathByElement(node));
 		}
 		return nodes;
 	}
@@ -75,5 +77,5 @@ public class XPathLookup
 		
 	}
 
-	public bool AddTrackedNode(XNode node, XPathTracker tracker) => AddTrackedNode(node, tracker.GetCurrentPath(node));
+	public bool AddTrackedNode(XNode node, XPathTracker tracker) => AddTrackedNode(node, tracker.GetCurrentPathByElement(node));
 }
