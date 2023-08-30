@@ -58,7 +58,9 @@ public class XMap : XDocument
 
     public XElement Lookup(string path) => mappedElements[path];
 
-    public bool PathExists(string path) => mappedElements.ContainsKey(path);
+    public bool TryLookup(string path, out XElement element) => mappedElements.TryGetValue(path, out element!);
+
+	public bool PathExists(string path) => mappedElements.ContainsKey(path);
 	/// <summary>
 	/// Return element at target path, with the given root and key generate function. Near to O(1) time complexity when path is mapped, O(n) when unmapped.
 	/// </summary>
@@ -233,35 +235,70 @@ public class XMap : XDocument
 
     public void MapAll() => MapSlice(string.Empty, false); 
 
-    public void ReplaceElement(string path, XElement newElement)
+    public XElement ReplaceElement(string path, XElement newElement)
     {
-        
-        XElement targetElement = Lookup(path); 
-        
-        Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist."); 
-        Debug.Assert(targetElement.Parent is not null, $"Target element at path:{path} has no parent.");
-        lock(targetElement.Parent)
+
+        XElement targetElement;
+
+        if (!TryLookup(path, out targetElement)) return targetElement;
+        //Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist."); 
+        //Debug.Assert(targetElement.Parent is not null, $"Target element at path:{path} has no parent.");
+
+        lock(targetElement.Parent!)
         lock(targetElement)
         {
             targetElement.ReplaceWith(newElement);
             if (targetElement == newElement) MapResetDuplicates(path, newElement);
         }
+        return targetElement;
     }
 
-    public void AppendElement(string path, XElement element)
+    public string AppendElement(string path, XElement element)
     {
-        XElement targetElement = Lookup(path); 
-        
-        Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist."); 
+        XElement targetElement;
+        string newPath = string.Empty;
+        //Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist."); 
+        if (!TryLookup(path, out targetElement)) return newPath;
         lock(targetElement)
         {
             targetElement.Add(element); 
+            element = (XElement)targetElement.LastNode!;
+            newPath = MapChildElement(path, element, targetElement.Elements().Count()); 
         }
+        return newPath;
     }
+
+    public string AppendElement(XElement targetElement, XElement element)
+    {
+        string newPath = string.Empty;
+
+		lock (targetElement)
+		{
+			targetElement.Add(element);
+			element = (XElement)targetElement.LastNode!;
+			newPath= MapChildElement(string.Empty, element, targetElement.Elements().Count());
+		}
+        return newPath;
+	}
+
+    public XElement RemoveElement(string path)
+    {
+		XElement targetElement;
+
+
+        if (!TryLookup(path, out targetElement)) return targetElement;
+        lock(targetElement)
+        {
+            targetElement.Remove();
+            mappedElements.Remove(path); 
+        }
+        return targetElement;
+	}
 
     public XElement CopyElement(string path)
     {
-        XElement targetElement = Lookup(path); 
+        XElement targetElement;
+        if (!TryLookup(path, out targetElement)) return targetElement;
         Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist.");
         return new XElement(targetElement); 
     }
@@ -323,7 +360,7 @@ public class XMap : XDocument
 		}
         return key; 
     }
-
+    
     private void MapNormal(string key, XElement element)
     {
 		mappedElements.Add(key, element);
@@ -346,6 +383,8 @@ public class XMap : XDocument
 			mappedElements.Add(key, element);
 		}
 	}
+
+    
 	private void MapRemoveDuplicateOriginal(string key, XElement element)
 	{
 		XElement? existingElement = null;
