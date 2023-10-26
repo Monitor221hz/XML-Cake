@@ -76,5 +76,5 @@ public class XExpression : IXExpression
 	}
 
 	private List<IXStep> matchSteps { get; set;  } = new List<IXStep>();
-	
+
 }
