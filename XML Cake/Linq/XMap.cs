@@ -8,6 +8,10 @@ using System.Xml.Linq;
 using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 using System.Windows.Media.Animation;
+using System.Runtime.Serialization;
+using System.ComponentModel;
+using System.Configuration;
+using System.Windows;
 
 public class XMap : XDocument
 {
@@ -119,7 +123,21 @@ public class XMap : XDocument
             MapChildElement(parentPath, element, i);
         }
     }
+	public void MapLayer(XElement workingRoot, bool useBlankPath, Action<string, XElement> mapFunc)
+	{
 
+
+
+		string rootPath = useBlankPath ? string.Empty : GetPath(workingRoot);
+		List<XElement> layerElements = workingRoot.Elements().ToList();
+		Debug.Assert(layerElements.Count > 0);
+		for (int i = 0; i < layerElements.Count; i++)
+		{
+
+			XElement element = layerElements[i];
+			MapChildElement(rootPath, element, i, mapFunc);
+		}
+	}
 	public void MapLayer(XElement workingRoot, bool useBlankPath)
 	{
 
@@ -140,12 +158,30 @@ public class XMap : XDocument
 	/// </summary>
 	/// <param name="rootPath"></param>
 	/// <param name="useBlankPath">whether mapped children use a blank root path</param>
+	/// 
+	public void MapLayer(string rootPath, bool useBlankPath, Action<string, XElement> mapFunc)
+	{
+
+		XElement workingRoot = NavigateTo(rootPath);
+
+		rootPath = useBlankPath ? string.Empty : rootPath;
+		List<XElement> layerElements = workingRoot.Elements().ToList();
+		Debug.Assert(layerElements.Count > 0);
+		for (int i = 0; i < layerElements.Count; i++)
+		{
+
+			XElement element = layerElements[i];
+			MapChildElement(rootPath, element, i, mapFunc);
+		}
+	}
+
 	public void MapLayer(string rootPath, bool useBlankPath)
     {
 
         XElement workingRoot = NavigateTo(rootPath);
         
-        rootPath = useBlankPath ? string.Empty : rootPath; 
+        rootPath = useBlankPath ? string.Empty : rootPath;
+		MapChildElement(rootPath, workingRoot, 0);
         List<XElement> layerElements = workingRoot.Elements().ToList();
         Debug.Assert(layerElements.Count > 0); 
         for (int i = 0; i < layerElements.Count; i++)
@@ -175,7 +211,59 @@ public class XMap : XDocument
 		}
 	}
 
-    public void MapSlice(XElement workingRoot, bool useBlankPath)
+	//public string MapSlice(XElement workingRoot, bool useBlankPath, Action<string, XElement> mapFunc, XElement pathElement)
+	//{
+	//	string rootPath = useBlankPath ? string.Empty : GetPath(workingRoot);
+	//	List<XElement> layerElements = workingRoot.Elements().ToList();
+	//	for (int i = 0; i < layerElements.Count; i++)
+	//	{
+	//		XElement element = layerElements[i];
+	//		string currentPath = MapChildElement(rootPath, element, i, mapFunc);
+	//		MapSlice(currentPath, false, mapFunc);
+	//	}
+	//}
+	public void MapSlice(XElement workingRoot, bool useBlankPath, Action<string, XElement> mapFunc)
+	{
+		string rootPath = useBlankPath ? string.Empty : GetPath(workingRoot);
+		List<XElement> layerElements = workingRoot.Elements().ToList();
+		for (int i = 0; i < layerElements.Count; i++)
+		{
+			XElement element = layerElements[i];
+			string currentPath = MapChildElement(rootPath, element, i, mapFunc);
+			MapSlice(currentPath, false, mapFunc);
+		}
+	}
+	public void MapSlice(string rootPath, int depth, bool useBlankPath, Action<string, XElement> mapFunc) //vertical mapping 
+	{
+		if (depth < 1) return;
+		XElement workingRoot = NavigateTo(rootPath);
+		rootPath = useBlankPath ? string.Empty : rootPath;
+		List<XElement> layerElements = workingRoot.Elements().ToList();
+		depth -= 1;
+		for (int i = 0; i < layerElements.Count; i++)
+		{
+			XElement element = layerElements[i];
+			string currentPath = MapChildElement(rootPath, element, i,mapFunc);
+			MapSlice(currentPath, depth, useBlankPath,mapFunc);
+		}
+
+	}
+
+	public void MapSlice(string rootPath, bool useBlankPath, Action<string, XElement> mapFunc)
+	{
+
+		XElement workingRoot = !String.IsNullOrEmpty(rootPath) ? NavigateTo(rootPath) : Root!;
+		rootPath = useBlankPath ? string.Empty : rootPath;
+		List<XElement> layerElements = workingRoot.Elements().ToList();
+		for (int i = 0; i < layerElements.Count; i++)
+		{
+			XElement element = layerElements[i];
+			string currentPath = MapChildElement(rootPath, element, i,mapFunc);
+			MapSlice(currentPath, false,mapFunc);
+		}
+	}
+
+	public void MapSlice(XElement workingRoot, bool useBlankPath)
 	{
 		string rootPath = useBlankPath ? string.Empty : GetPath(workingRoot);
 		List<XElement> layerElements = workingRoot.Elements().ToList();
@@ -233,26 +321,67 @@ public class XMap : XDocument
 
     public void MapSlice(XElement rootElement) => MapSlice(GenerateKey(rootElement), false);
 
-    public void MapAll() => MapSlice(string.Empty, false); 
+    public void MapAll() => MapSlice(string.Empty, false);
+	public class XNodeMarker
+	{
+		private bool forward { get; set; } = true;
+		private XNode refNode { get; set; }
 
-    public XElement ReplaceElement(string path, XElement newElement)
+		private XElement parent;
+		public XNodeMarker(XNode node)
+		{
+			forward = node.NextNode != null;
+			refNode = forward ? node.NextNode! : node.PreviousNode!;
+			parent = node.Parent!; 
+		}
+
+		public XNode GetMarkedNode() => refNode == null ? parent.Elements().First() : (forward ? refNode.PreviousNode! : refNode.NextNode!);
+	}
+
+		public XElement ReplaceElement(string path, XElement newElement)
     {
 
-        XElement targetElement;
+		XElement targetElement;
 
-        if (!TryLookup(path, out targetElement)) return targetElement;
-        //Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist."); 
-        //Debug.Assert(targetElement.Parent is not null, $"Target element at path:{path} has no parent.");
-
-        lock(targetElement.Parent!)
-        lock(targetElement)
-        {
-            targetElement.ReplaceWith(newElement);
-            if (targetElement == newElement) MapResetDuplicates(path, newElement);
-        }
-        return targetElement;
-    }
+		if (!TryLookup(path, out targetElement)) return targetElement;
+		//Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist."); 
+		//Debug.Assert(targetElement.Parent is not null, $"Target element at path:{path} has no parent.");
+		XElement parentElement = targetElement.Parent!;
+		lock (parentElement)
+			lock (targetElement)
+			{
+				var marker = new XNodeMarker(targetElement);
+				targetElement.ReplaceWith(newElement);
+				newElement = (XElement)marker.GetMarkedNode();
+				MapResetDuplicates(path, newElement);
+			}
+		return targetElement;
+	}
     //todo: proper insertelement method with remapping of parent
+
+    public string InsertElement(string path, XElement newElement, bool remapParent)
+    {
+		XElement targetElement;
+		string newPath = string.Empty;
+		//Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist."); 
+		string parentPath = path.Substring(0, path.LastIndexOf('/'));
+		if (!TryLookup(path, out targetElement))
+		{
+			return AppendElement(parentPath, newElement);
+		}
+		if (targetElement.Parent == null) return newPath;
+		lock (targetElement.Parent)
+			lock (targetElement)
+			{
+				var marker = new XNodeMarker(targetElement);
+				targetElement.AddBeforeSelf(newElement);
+				newElement = (XElement)(marker.GetMarkedNode());
+				if (remapParent) MapSlice(targetElement.Parent!, false, MapResetDuplicates);
+				newPath = GetPath(parentPath, newElement, targetElement.Elements().Count() - 1);
+			}
+		return newPath;
+	}
+
     public string AppendElement(string path, XElement element)
     {
         XElement targetElement;
@@ -263,7 +392,7 @@ public class XMap : XDocument
         {
             targetElement.Add(element); 
             element = (XElement)targetElement.LastNode!;
-            newPath = MapChildElement(path, element, targetElement.Elements().Count()); 
+            newPath = MapChildElement(path, element, targetElement.Elements().Count()-1); 
         }
         return newPath;
     }
@@ -276,12 +405,12 @@ public class XMap : XDocument
 		{
 			targetElement.Add(element);
 			element = (XElement)targetElement.LastNode!;
-			newPath= MapChildElement(string.Empty, element, targetElement.Elements().Count());
+			newPath= MapChildElement(string.Empty, element, targetElement.Elements().Count()-1);
 		}
         return newPath;
-	}
+	}//deprecated
 
-    public XElement RemoveElement(string path)
+	public XElement RemoveElement(string path)
     {
 		XElement targetElement;
 
@@ -342,8 +471,14 @@ public class XMap : XDocument
 
     private XElement FindChildByKey(XElement parent, string key) => FindChildByKey(parent, key, GenerateKey);
 
-
-    private string GetPath(string path, XElement element, int elementIndex)
+	private string GetPath(string path, XElement element, int elementIndex, Func<XElement, string> generateKey)
+	{
+		string defaultValue = element.NodeType.ToString();
+		string key = generateKey(element);
+		key = (key == defaultValue) ? GetDefaultPath(path, defaultValue, elementIndex) : GetUniquePath(path, key);
+		return key;
+	}
+	private string GetPath(string path, XElement element, int elementIndex)
     {
 		string defaultValue = element.NodeType.ToString();
 		string key = GenerateKey(element);
@@ -351,6 +486,17 @@ public class XMap : XDocument
         return key; 
 	}
     public string GetPath(XElement element) => GetPath(String.Empty, element, 0);
+
+	private string MapChildElement(string path, XElement element, int elementIndex, Action<string, XElement> CustomMapElementToPath)
+	{
+		string key = GetPath(path, element, elementIndex);
+		lock (mappedElements)
+		{
+			CustomMapElementToPath(key, element);
+		}
+		return key;
+	}
+
 	private string MapChildElement(string path, XElement element, int elementIndex)
     {
         string key = GetPath(path, element, elementIndex);
