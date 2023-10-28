@@ -51,18 +51,18 @@ public class XSkipWrapExpression : IXExpression
 				buffer.Add(node);
 
 			}
+
+			if (p == matchSteps.Count)
+			{
+				if (buffer.Count == matchSteps.Count) break;
+				return new XMatch(buffer);
+			}
 			if (skipStep.IsMatch(node))
 			{
 				p = 0;
 				buffer.Clear();
 				continue; 
 			}
-			if (p == matchSteps.Count)
-			{
-				if (buffer.Count == matchSteps.Count) break;
-				return new XMatch(buffer);
-			}
-
 		}
 		return new XMatch();
 
@@ -94,12 +94,7 @@ public class XSkipWrapExpression : IXExpression
 				buffer.Add(node);
 
 			}
-			if (skipStep.IsMatch(node))
-			{
-				p = 0;
-				buffer.Clear();
-				continue;
-			}
+
 			if (p == matchSteps.Count)
 			{
 				if (buffer.Count == matchSteps.Count) break;
@@ -107,7 +102,12 @@ public class XSkipWrapExpression : IXExpression
 				matchList.Add(new XMatch(new List<XNode>(buffer)));
 				buffer.Clear();
 			}
-
+			if (skipStep.IsMatch(node))
+			{
+				p = 0;
+				buffer.Clear();
+				continue;
+			}
 
 		}
 		return new XMatchCollection(matchList);

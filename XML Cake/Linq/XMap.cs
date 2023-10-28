@@ -12,6 +12,7 @@ using System.Runtime.Serialization;
 using System.ComponentModel;
 using System.Configuration;
 using System.Windows;
+using System.IO;
 
 public class XMap : XDocument
 {
@@ -47,6 +48,8 @@ public class XMap : XDocument
 	}
 
     public static new XMap Load(string uri) => new XMap(XDocument.Load(uri)); 
+
+	public static new XMap Load(Stream stream) => new XMap(XDocument.Load(stream));
 
     public static string TryGetAttributeName(string attributeName, XElement element)
     {
