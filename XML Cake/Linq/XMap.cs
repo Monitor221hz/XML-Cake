@@ -395,23 +395,12 @@ public class XMap : XDocument
         {
             targetElement.Add(element); 
             element = (XElement)targetElement.LastNode!;
-            newPath = MapChildElement(path, element, targetElement.Elements().Count()-1); 
+            newPath = MapChildElement(path, element, targetElement.Elements().Count()); 
         }
         return newPath;
     }
 
-    public string AppendElement(XElement targetElement, XElement element)
-    {
-        string newPath = string.Empty;
 
-		lock (targetElement)
-		{
-			targetElement.Add(element);
-			element = (XElement)targetElement.LastNode!;
-			newPath= MapChildElement(string.Empty, element, targetElement.Elements().Count()-1);
-		}
-        return newPath;
-	}//deprecated
 
 	public XElement RemoveElement(string path)
     {
