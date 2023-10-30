@@ -146,7 +146,7 @@ public class XPathTracker
 			//unnamedElementCounts[depth + 1] = 0;
 		}
 		lastDepth = depth;
-		if (depth > maxDepth)
+		if (depth > maxDepth && IsContentNode(nodeType))
 		{
 			ExtendPath(node, depth);
 		}
@@ -157,7 +157,7 @@ public class XPathTracker
 				ChangePath(depth, GetPathNameNode(node));
 				return;
 			}
-			if (IsContentNode(node.NodeType))
+			if (IsContentNode(nodeType))
 			{
 				trackedPath[depth] = nodeType.ToString() + unnamedElementCounts[depth];
 				unnamedElementCounts[depth]++;
