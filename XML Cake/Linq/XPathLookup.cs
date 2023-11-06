@@ -37,6 +37,10 @@ public class XPathLookup
 
 	public string LookupPath(XNode node) => nodePaths[node];
 
+	public bool TryLookupPath(XNode node, out string? path) => nodePaths.TryGetValue(node, out path);
+
+	public bool PathExists(XNode node) => nodePaths.ContainsKey(node);
+
 
 	public bool AddTrackedNode(XmlReader reader, string path)
 	{

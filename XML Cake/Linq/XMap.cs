@@ -380,22 +380,22 @@ public class XMap : XDocument
 				targetElement.AddBeforeSelf(newElement);
 				newElement = (XElement)(marker.GetMarkedNode());
 				if (remapParent) MapSlice(targetElement.Parent!, false, MapResetDuplicates);
-				newPath = GetPath(parentPath, newElement, targetElement.Elements().Count() - 1);
+				newPath = GetPath(parentPath, newElement, newElement.ElementsBeforeSelf().Count()-1);
 			}
 		return newPath;
 	}
 
     public string AppendElement(string path, XElement element)
     {
-        XElement targetElement;
+        XElement parentElement;
         string newPath = string.Empty;
         //Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist."); 
-        if (!TryLookup(path, out targetElement)) return newPath;
-        lock(targetElement)
+        if (!TryLookup(path, out parentElement)) return newPath;
+        lock(parentElement)
         {
-            targetElement.Add(element); 
-            element = (XElement)targetElement.LastNode!;
-            newPath = MapChildElement(path, element, targetElement.Elements().Count()); 
+            parentElement.Add(element); 
+            element = (XElement)parentElement.LastNode!;
+            newPath = MapChildElement(path, element, element.ElementsBeforeSelf().Count(), MapResetDuplicates); 
         }
         return newPath;
     }
@@ -406,14 +406,23 @@ public class XMap : XDocument
     {
 		XElement targetElement;
 
-
-        if (!TryLookup(path, out targetElement)) return targetElement;
-        lock(targetElement)
-        {
-            targetElement.Remove();
-            mappedElements.Remove(path); 
-        }
-        return targetElement;
+		string parentPath = path.Substring(0, path.LastIndexOf('/'));
+		if (!TryLookup(path, out targetElement)) return targetElement;
+		XElement parentElement = targetElement.Parent!;
+		lock (targetElement)
+		{
+			targetElement.Remove();
+			lock (mappedElements)
+			{
+				if (!mappedElements.Remove(path)) return targetElement;
+				//path = GetPath(parentPath, targetElement, parentElement.Elements().Count());
+				//mappedElements.Remove(path);
+				//removing this path is necessary for full data integrity but it also messes up any existing paths to the container by index
+			}
+			MapSlice(parentElement, false, MapResetDuplicates);
+			
+		}
+		return targetElement;
 	}
 
     public XElement CopyElement(string path)
