@@ -75,6 +75,11 @@ public class XExpression : IXExpression
 		return new XMatchCollection(matchList);
 	}
 
+	public XMatchCollection Removes(List<XNode> nodes)
+	{
+		throw new NotImplementedException();
+	}
+
 	private List<IXStep> matchSteps { get; set;  } = new List<IXStep>();
 
 }

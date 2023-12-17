@@ -400,7 +400,22 @@ public class XMap : XDocument
         return newPath;
     }
 
-
+	public string PushElement(string path, XElement element)
+	{
+		XElement parentElement;
+		string newPath = string.Empty;
+		//Debug.Assert(targetElement is not null, $"Target element at path:{path} does not exist."); 
+		if (!TryLookup(path, out parentElement)) return newPath;
+		lock (parentElement)
+		{
+			var firstNode = parentElement.FirstNode;
+			if (firstNode == null) return newPath;
+			firstNode.AddBeforeSelf(element);
+			element = (XElement)firstNode.PreviousNode!;
+			newPath = MapChildElement(path, element, element.ElementsBeforeSelf().Count(), MapResetDuplicates);
+		}
+		return newPath;
+	}
 
 	public XElement RemoveElement(string path)
     {

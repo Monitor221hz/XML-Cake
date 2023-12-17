@@ -87,6 +87,10 @@ public class XWrapExpression : IXExpression
 		return new XMatchCollection(matchList);
 	}
 
+	public XMatchCollection Removes(List<XNode> nodes)
+	{
+		throw new System.NotImplementedException();
+	}
 
 	private List<IXStep> matchSteps { get; set; } = new List<IXStep>();
 }

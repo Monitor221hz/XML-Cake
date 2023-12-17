@@ -113,6 +113,53 @@ public class XSkipWrapExpression : IXExpression
 		return new XMatchCollection(matchList);
 	}
 
+	public XMatchCollection Removes(List<XNode> nodes)
+	{
+		int p = 0;
+
+		int skipCount = 0;
+		List<XMatch> matchList = new List<XMatch>();
+		List<XNode> buffer = new List<XNode>();
+		foreach (XNode node in nodes)
+		{
+			if (skipCount > 0)
+			{
+				skipCount -= 1;
+				continue;
+			}
+			if (matchSteps[p].IsMatch(node)) { p++; }
+			if (p > 0)
+			{
+				if (node.NodeType == XmlNodeType.Element)
+				{
+					XElement element = (XElement)node;
+					skipCount = element.DescendantNodes().Count(); //skip child nodes 
+				}
+				buffer.Add(node);
+
+			}
+
+			if (p == matchSteps.Count)
+			{
+				if (buffer.Count == matchSteps.Count) break;
+				p = 0;
+				foreach(var xnode in buffer) 
+				{
+					if (xnode.Parent != null) xnode.Remove(); 
+				}
+				matchList.Add(new XMatch(new List<XNode>(buffer)));
+				buffer.Clear();
+			}
+			if (skipStep.IsMatch(node))
+			{
+				p = 0;
+				buffer.Clear();
+				continue;
+			}
+
+		}
+		return new XMatchCollection(matchList);
+	}
 
 	private List<IXStep> matchSteps { get; set; } = new List<IXStep>();
 }
