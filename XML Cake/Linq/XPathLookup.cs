@@ -27,7 +27,6 @@ public class XPathLookup
 		foreach (XNode node in nodes)
 		{
 			tracker.ResolvePath(node);
-			string currentPath = tracker.GetCurrentPathByElement(node); //remove later
 			
 			AddTrackedNode(node, tracker.GetCurrentPathByElement(node));
 		}
