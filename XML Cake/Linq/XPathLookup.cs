@@ -9,10 +9,10 @@ namespace XmlCake.Linq;
 
 public class XPathLookup
 {
-
+	private static XNodeEqualityComparer comparer = new(); 
     public XPathLookup() { }
 
-    Dictionary<XNode, string> nodePaths = new Dictionary<XNode, string>();
+    Dictionary<XNode, string> nodePaths = new Dictionary<XNode, string>(comparer);
 
 
 	public List<XNode> MapFromElement(XElement root)

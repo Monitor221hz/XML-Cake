@@ -26,6 +26,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\XML Cake\XML Cake.csproj" />
+    <None Update="Test Files\Compare\Element\new_element.xml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
+    <None Update="Test Files\Compare\Element\original_element.xml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </None>
   </ItemGroup>
 
 </Project>
