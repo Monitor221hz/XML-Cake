@@ -14,7 +14,7 @@ using System.Configuration;
 using System.Windows;
 using System.IO;
 
-public class XMapElement : XElement
+public class XMapElement : XElement, IXMap
 {
 	// private XElement Root { get; set; }
 
@@ -307,8 +307,8 @@ public class XMapElement : XElement
 	/// <param name="useBlankPath"></param>
 	public void MapSlice(string rootPath, bool useBlankPath)
 	{
-
-		XElement workingRoot = !String.IsNullOrEmpty(rootPath) ? NavigateTo(rootPath) : this;
+		string thisKey = GenerateKey(this);
+		XElement workingRoot = !String.IsNullOrEmpty(rootPath) ? thisKey == rootPath ? this : NavigateTo(rootPath) : this;
 		rootPath = useBlankPath ? string.Empty : rootPath;
 		List<XElement> layerElements = workingRoot.Elements().ToList();
 		for (int i = 0; i < layerElements.Count; i++)
